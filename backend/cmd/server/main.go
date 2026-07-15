@@ -39,6 +39,7 @@ func main() {
 	brandRepo := repository.NewInMemoryBrandRepository()
 	jobRepo := repository.NewInMemoryJobRepository()
 	assignmentRepo := repository.NewInMemoryAssignmentRepository()
+	progressRepo := repository.NewInMemoryProgressRepository()
 
 	// Seed default superadmin
 	seedSuperAdmin(userRepo)
@@ -48,9 +49,11 @@ func main() {
 	userHandler := handlers.NewUserHandler(userRepo)
 	talentHandler := handlers.NewTalentHandler(talentRepo)
 	socialMediaHandler := handlers.NewSocialMediaHandler(socialMediaRepo)
-	brandHandler := handlers.NewBrandHandler(brandRepo)
+	brandHandler := handlers.NewBrandHandler(brandRepo, jobRepo, progressRepo)
 	jobHandler := handlers.NewJobHandler(jobRepo)
 	assignmentHandler := handlers.NewAssignmentHandler(assignmentRepo, jobRepo, socialMediaRepo)
+	progressHandler := handlers.NewProgressHandler(progressRepo, assignmentRepo)
+	dashboardHandler := handlers.NewDashboardHandler(jobRepo, assignmentRepo, progressRepo)
 
 	// Create Fiber app
 	app := fiber.New()
@@ -138,6 +141,18 @@ func main() {
 	jobs.Post("/:jobId/assignments", assignmentHandler.Assign)
 	jobs.Get("/:jobId/assignments", assignmentHandler.ListByJobID)
 	protected.Delete("/assignments/:id", assignmentHandler.Unassign)
+
+	// Progress tracking - talent and admin
+	progress := protected.Group("/progress")
+	progress.Get("/:assignment_id", progressHandler.GetByAssignmentID)
+	progress.Put("/:assignment_id/step", progressHandler.UpdateStep)
+
+	// Job progress - admin only
+	jobs.Get("/:job_id/progress", progressHandler.ListByJobID)
+
+	// Dashboard - admin only
+	dashboard := protected.Group("/dashboard", middleware.RoleMiddleware(models.RoleAdmin, models.RoleSuperadmin))
+	dashboard.Get("", dashboardHandler.GetSummary)
 
 	// Start server
 	log.Printf("Server starting on port %s", port)

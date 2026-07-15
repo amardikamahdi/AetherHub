@@ -164,6 +164,10 @@ class ApiClient {
   }
 
   // Job management
+  async getJob(id: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/jobs/${id}`)
+  }
+
   async listJobs(offset = 0, limit = 20) {
     const params = new URLSearchParams({
       offset: String(offset),
@@ -208,6 +212,27 @@ class ApiClient {
 
   async listAssignmentsByJob(jobId: string) {
     return this.request<{ success: boolean; data: any[] }>(`/api/jobs/${jobId}/assignments`)
+  }
+
+  // Progress tracking
+  async getProgress(assignmentId: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/progress/${assignmentId}`)
+  }
+
+  async updateProgressStep(assignmentId: string, step: string, notes?: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/progress/${assignmentId}/step`, {
+      method: 'PUT',
+      body: JSON.stringify({ step, notes }),
+    })
+  }
+
+  async getJobProgress(jobId: string) {
+    return this.request<{ success: boolean; data: any[] }>(`/api/jobs/${jobId}/progress`)
+  }
+
+  // Dashboard
+  async getDashboard() {
+    return this.request<{ success: boolean; data: any }>('/api/dashboard')
   }
 }
 

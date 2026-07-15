@@ -4,60 +4,93 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { apiClient } from '@/lib/api'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { DashboardStats } from '@/components/admin/dashboard-stats'
+import { ProgressTable } from '@/components/admin/progress-table'
 
-interface Stats {
-  totalUsers: number
-  totalTalents: number
-  totalAdmins: number
+interface DashboardSummary {
+  total_jobs: number
+  active_jobs: number
+  completed_jobs: number
+  total_assignments: number
+  completed_steps: number
+  total_steps: number
+}
+
+interface Job {
+  id: string
+  title: string
+  brand_name: string
+  status: string
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<Stats>({ totalUsers: 0, totalTalents: 0, totalAdmins: 0 })
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    apiClient.listUsers(0, 100).then((res) => {
-      const users = res.data || []
-      setStats({
-        totalUsers: res.total || users.length,
-        totalTalents: users.filter((u: any) => u.role === 'talent').length,
-        totalAdmins: users.filter((u: any) => u.role === 'admin' || u.role === 'superadmin').length,
-      })
-    }).catch(() => {})
+    const loadData = async () => {
+      try {
+        // Load dashboard summary
+        const dashboardRes = await apiClient.getDashboard()
+        setSummary(dashboardRes.data)
+
+        // Load jobs for progress tables
+        const jobsRes = await apiClient.listJobs(0, 100)
+        setJobs(jobsRes.data || [])
+      } catch {
+        // Silently handle errors
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
   }, [])
 
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-500">Total Users</p>
-            <p className="text-3xl font-bold">{stats.totalUsers}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-500">Total Talents</p>
-            <p className="text-3xl font-bold">{stats.totalTalents}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-500">Total Admins</p>
-            <p className="text-3xl font-bold">{stats.totalAdmins}</p>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <Link
+            href="/admin/jobs"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Manage Jobs
+          </Link>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="flex gap-4">
-            <Link
-              href="/admin/users?action=create"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Create User
-            </Link>
-          </div>
-        </div>
+        {isLoading ? (
+          <p className="text-gray-500">Loading...</p>
+        ) : (
+          <>
+            {/* Stats cards */}
+            {summary && <DashboardStats summary={summary} />}
+
+            {/* Job progress tables */}
+            {jobs.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-lg font-semibold">Job Progress</h2>
+                {jobs.map((job) => (
+                  <div key={job.id} className="bg-white rounded-lg shadow p-6">
+                    <div className="mb-4">
+                      <h3 className="font-medium">{job.title}</h3>
+                      <p className="text-sm text-gray-500">{job.brand_name}</p>
+                    </div>
+                    <ProgressTable jobId={job.id} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {jobs.length === 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <p className="text-gray-500">No jobs yet. Create one to get started.</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </AdminLayout>
   )

@@ -14,7 +14,9 @@ import (
 func setupBrandApp() (*fiber.App, *BrandHandler) {
 	app := fiber.New()
 	repo := repository.NewInMemoryBrandRepository()
-	handler := NewBrandHandler(repo)
+	jobRepo := repository.NewInMemoryJobRepository()
+	progressRepo := repository.NewInMemoryProgressRepository()
+	handler := NewBrandHandler(repo, jobRepo, progressRepo)
 
 	app.Post("/api/brand/validate/:code", handler.ValidateCode)
 	app.Get("/api/brand/access/:code", handler.Access)
