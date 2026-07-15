@@ -23,8 +23,32 @@ describe('BrandDashboardPage', () => {
       data: {
         brand_name: 'Test Brand',
         jobs: [
-          { id: '1', title: 'Campaign A', status: 'active' },
-          { id: '2', title: 'Campaign B', status: 'pending' },
+          {
+            id: '1',
+            title: 'Campaign A',
+            brand_name: 'Test Brand',
+            status: 'active',
+            progress: [
+              {
+                assignment_id: 'assign-1',
+                job_id: '1',
+                talent_id: 'talent-1',
+                steps: [
+                  { step: 'absen', status: 'completed' },
+                  { step: 'draft_storyline', status: 'pending' },
+                  { step: 'input_link', status: 'pending' },
+                  { step: 'insight', status: 'pending' },
+                ],
+              },
+            ],
+          },
+          {
+            id: '2',
+            title: 'Campaign B',
+            brand_name: 'Test Brand',
+            status: 'pending',
+            progress: [],
+          },
         ],
       },
     })
@@ -37,12 +61,14 @@ describe('BrandDashboardPage', () => {
 
   it('displays brand name', async () => {
     render(<BrandDashboardPage />)
-    expect(await screen.findByText('Test Brand')).toBeInTheDocument()
+    const brandNames = await screen.findAllByText('Test Brand')
+    expect(brandNames.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('displays assigned jobs section', async () => {
+  it('displays job titles', async () => {
     render(<BrandDashboardPage />)
-    expect(await screen.findByRole('heading', { name: /assigned jobs/i })).toBeInTheDocument()
+    expect(await screen.findByText('Campaign A')).toBeInTheDocument()
+    expect(screen.getByText('Campaign B')).toBeInTheDocument()
   })
 
   it('displays job list', async () => {

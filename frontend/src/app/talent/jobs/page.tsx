@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { TalentLayout } from '@/components/talent/talent-layout'
 import { apiClient } from '@/lib/api'
 
@@ -135,6 +136,15 @@ export default function TalentJobsPage() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+
+                  <div className="mt-4">
+                    <Link
+                      href={`/talent/jobs/${job.id}`}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 inline-block"
+                    >
+                      View Progress
+                    </Link>
                   </div>
                 </div>
               )
