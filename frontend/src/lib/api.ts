@@ -78,6 +78,16 @@ class ApiClient {
     if (role) params.set('role', role)
     return this.request<{ success: boolean; data: any[]; total: number }>(`/api/users?${params}`)
   }
+
+  async validateBrandCode(code: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/brand/validate/${code}`, {
+      method: 'POST',
+    })
+  }
+
+  async getBrandAccess(code: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/brand/access/${code}`)
+  }
 }
 
 export const apiClient = new ApiClient()
