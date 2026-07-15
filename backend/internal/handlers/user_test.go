@@ -137,6 +137,34 @@ func TestUserHandler_Update(t *testing.T) {
 		}
 	})
 
+	t.Run("returns 400 for invalid role", func(t *testing.T) {
+		body, _ := json.Marshal(map[string]string{
+			"role": "hacker",
+		})
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/user-update", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		resp, _ := app.Test(req)
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("returns 400 for invalid email format", func(t *testing.T) {
+		body, _ := json.Marshal(map[string]string{
+			"email": "not-an-email",
+		})
+
+		req := httptest.NewRequest(http.MethodPut, "/api/users/user-update", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		resp, _ := app.Test(req)
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("returns 404 for non-existent user", func(t *testing.T) {
 		body, _ := json.Marshal(map[string]string{"name": "X"})
 		req := httptest.NewRequest(http.MethodPut, "/api/users/non-existent", bytes.NewReader(body))

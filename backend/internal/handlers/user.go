@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/amardikamahdi/AetherHub/internal/models"
 	"github.com/amardikamahdi/AetherHub/internal/repository"
 	"github.com/gofiber/fiber/v2"
 )
@@ -87,14 +88,33 @@ func (h *UserHandler) Update(c *fiber.Ctx) error {
 		})
 	}
 
-	if req.Name != "" {
-		user.Name = req.Name
+	if req.Role != "" {
+		validRoles := map[string]bool{
+			models.RoleSuperadmin: true,
+			models.RoleAdmin:      true,
+			models.RoleTalent:     true,
+		}
+		if !validRoles[req.Role] {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"success": false,
+				"error":   "Invalid role. Must be one of: superadmin, admin, talent",
+			})
+		}
+		user.Role = req.Role
 	}
+
 	if req.Email != "" {
+		if !emailRegex.MatchString(req.Email) {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"success": false,
+				"error":   "Invalid email format",
+			})
+		}
 		user.Email = req.Email
 	}
-	if req.Role != "" {
-		user.Role = req.Role
+
+	if req.Name != "" {
+		user.Name = req.Name
 	}
 
 	if err := h.repo.Update(user); err != nil {
