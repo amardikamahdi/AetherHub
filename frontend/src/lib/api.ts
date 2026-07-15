@@ -70,8 +70,13 @@ class ApiClient {
     return data.data
   }
 
-  async listUsers(offset = 0, limit = 20) {
-    return this.request<{ success: boolean; data: any[]; total: number }>(`/api/users?offset=${offset}&limit=${limit}`)
+  async listUsers(offset = 0, limit = 20, role?: string) {
+    const params = new URLSearchParams({
+      offset: String(offset),
+      limit: String(limit),
+    })
+    if (role) params.set('role', role)
+    return this.request<{ success: boolean; data: any[]; total: number }>(`/api/users?${params}`)
   }
 }
 
