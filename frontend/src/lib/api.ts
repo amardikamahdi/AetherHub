@@ -108,6 +108,60 @@ class ApiClient {
   async getBrandAccess(code: string) {
     return this.request<{ success: boolean; data: any }>(`/api/brand/access/${code}`)
   }
+
+  // Talent management
+  async listTalents(offset = 0, limit = 20) {
+    const params = new URLSearchParams({
+      offset: String(offset),
+      limit: String(limit),
+    })
+    return this.request<{ success: boolean; data: any[]; total: number }>(`/api/talents?${params}`)
+  }
+
+  async createTalent(talentData: { name: string; email: string; phone?: string; user_id?: string }) {
+    return this.request<{ success: boolean; data: any }>('/api/talents', {
+      method: 'POST',
+      body: JSON.stringify(talentData),
+    })
+  }
+
+  async updateTalent(id: string, talentData: { name?: string; email?: string; phone?: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/talents/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(talentData),
+    })
+  }
+
+  async deleteTalent(id: string) {
+    return this.request<{ success: boolean }>(`/api/talents/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Social media management
+  async listSocialMedia(talentId: string) {
+    return this.request<{ success: boolean; data: any[] }>(`/api/talents/${talentId}/social-media`)
+  }
+
+  async createSocialMedia(talentId: string, data: { platform: string; username: string; url?: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/talents/${talentId}/social-media`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateSocialMedia(id: string, data: { username?: string; url?: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/social-media/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteSocialMedia(id: string) {
+    return this.request<{ success: boolean }>(`/api/social-media/${id}`, {
+      method: 'DELETE',
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
