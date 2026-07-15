@@ -37,6 +37,8 @@ func main() {
 	talentRepo := repository.NewInMemoryTalentRepository()
 	socialMediaRepo := repository.NewInMemorySocialMediaRepository()
 	brandRepo := repository.NewInMemoryBrandRepository()
+	jobRepo := repository.NewInMemoryJobRepository()
+	assignmentRepo := repository.NewInMemoryAssignmentRepository()
 
 	// Seed default superadmin
 	seedSuperAdmin(userRepo)
@@ -47,6 +49,8 @@ func main() {
 	talentHandler := handlers.NewTalentHandler(talentRepo)
 	socialMediaHandler := handlers.NewSocialMediaHandler(socialMediaRepo)
 	brandHandler := handlers.NewBrandHandler(brandRepo)
+	jobHandler := handlers.NewJobHandler(jobRepo)
+	assignmentHandler := handlers.NewAssignmentHandler(assignmentRepo, jobRepo, socialMediaRepo)
 
 	// Create Fiber app
 	app := fiber.New()
@@ -121,6 +125,19 @@ func main() {
 	// Social media update/delete - ownership check in handler
 	protected.Put("/social-media/:id", socialMediaHandler.Update)
 	protected.Delete("/social-media/:id", socialMediaHandler.Delete)
+
+	// Job management - admin only for CRUD
+	jobs := protected.Group("/jobs", middleware.RoleMiddleware(models.RoleAdmin, models.RoleSuperadmin))
+	jobs.Get("", jobHandler.List)
+	jobs.Post("", jobHandler.Create)
+	jobs.Get("/:id", jobHandler.GetByID)
+	jobs.Put("/:id", jobHandler.Update)
+	jobs.Delete("/:id", jobHandler.Delete)
+
+	// Job assignments - admin only
+	jobs.Post("/:jobId/assignments", assignmentHandler.Assign)
+	jobs.Get("/:jobId/assignments", assignmentHandler.ListByJobID)
+	protected.Delete("/assignments/:id", assignmentHandler.Unassign)
 
 	// Start server
 	log.Printf("Server starting on port %s", port)

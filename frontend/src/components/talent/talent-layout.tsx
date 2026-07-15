@@ -8,6 +8,7 @@ import { useAuth } from '@/providers/auth-provider'
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/talent/dashboard' },
   { label: 'Social Media', href: '/talent/social-media' },
+  { label: 'My Jobs', href: '/talent/jobs' },
 ]
 
 interface TalentLayoutProps {
