@@ -162,6 +162,53 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // Job management
+  async listJobs(offset = 0, limit = 20) {
+    const params = new URLSearchParams({
+      offset: String(offset),
+      limit: String(limit),
+    })
+    return this.request<{ success: boolean; data: any[]; total: number }>(`/api/jobs?${params}`)
+  }
+
+  async createJob(jobData: { title: string; description?: string; brand_name: string; deadline?: string }) {
+    return this.request<{ success: boolean; data: any }>('/api/jobs', {
+      method: 'POST',
+      body: JSON.stringify(jobData),
+    })
+  }
+
+  async updateJob(id: string, jobData: { title?: string; description?: string; brand_name?: string; status?: string; deadline?: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/jobs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData),
+    })
+  }
+
+  async deleteJob(id: string) {
+    return this.request<{ success: boolean }>(`/api/jobs/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Job assignments
+  async assignToJob(jobId: string, socialMediaId: string) {
+    return this.request<{ success: boolean; data: any }>(`/api/jobs/${jobId}/assignments`, {
+      method: 'POST',
+      body: JSON.stringify({ social_media_id: socialMediaId }),
+    })
+  }
+
+  async unassignFromJob(assignmentId: string) {
+    return this.request<{ success: boolean }>(`/api/assignments/${assignmentId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async listAssignmentsByJob(jobId: string) {
+    return this.request<{ success: boolean; data: any[] }>(`/api/jobs/${jobId}/assignments`)
+  }
 }
 
 export const apiClient = new ApiClient()
