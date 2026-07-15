@@ -29,14 +29,12 @@ export default function UsersPage() {
 
   const handleSubmit = (data: { name: string; email: string; password: string; role: string }) => {
     // TODO: Call API to create/update user
-    console.log('Submit:', data)
     setIsModalOpen(false)
     setRefreshKey((k) => k + 1)
   }
 
   const handleDelete = (user: User) => {
     // TODO: Call API to delete user
-    console.log('Delete:', user)
   }
 
   return (
