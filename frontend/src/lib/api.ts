@@ -79,6 +79,26 @@ class ApiClient {
     return this.request<{ success: boolean; data: any[]; total: number }>(`/api/users?${params}`)
   }
 
+  async createUser(userData: { name: string; email: string; password: string; role: string }) {
+    return this.request<{ success: boolean; data: any }>('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    })
+  }
+
+  async updateUser(id: string, userData: { name: string; email: string; password?: string; role: string }) {
+    return this.request<{ success: boolean; data: any }>(`/api/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    })
+  }
+
+  async deleteUser(id: string) {
+    return this.request<{ success: boolean }>(`/api/users/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   async validateBrandCode(code: string) {
     return this.request<{ success: boolean; data: any }>(`/api/brand/validate/${code}`, {
       method: 'POST',

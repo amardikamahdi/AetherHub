@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { UserTable } from '@/components/admin/user-table'
 import { UserModal } from '@/components/admin/user-modal'
+import { apiClient } from '@/lib/api'
 
 interface User {
   id: string
@@ -27,14 +28,30 @@ export default function UsersPage() {
     setIsModalOpen(true)
   }
 
-  const handleSubmit = (data: { name: string; email: string; password: string; role: string }) => {
-    // TODO: Call API to create/update user
-    setIsModalOpen(false)
-    setRefreshKey((k) => k + 1)
+  const handleSubmit = async (data: { name: string; email: string; password: string; role: string }) => {
+    try {
+      if (editingUser) {
+        await apiClient.updateUser(editingUser.id, data)
+      } else {
+        await apiClient.createUser(data)
+      }
+      setIsModalOpen(false)
+      setRefreshKey((k) => k + 1)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to save user')
+    }
   }
 
-  const handleDelete = (user: User) => {
-    // TODO: Call API to delete user
+  const handleDelete = async (user: User) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return
+    }
+    try {
+      await apiClient.deleteUser(user.id)
+      setRefreshKey((k) => k + 1)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete user')
+    }
   }
 
   return (
