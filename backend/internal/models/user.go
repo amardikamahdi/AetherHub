@@ -43,11 +43,16 @@ type LoginResponse struct {
 
 // TalentProfile extends User with talent-specific fields.
 type TalentProfile struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
-	Phone  string `json:"phone,omitempty"`
-	Photo  string `json:"photo_url,omitempty"`
-	Bio    string `json:"bio,omitempty"`
+	ID        string     `json:"id"`
+	UserID    string     `json:"user_id"`
+	Name      string     `json:"name"`
+	Email     string     `json:"email"`
+	Phone     string     `json:"phone,omitempty"`
+	Photo     string     `json:"photo_url,omitempty"`
+	Bio       string     `json:"bio,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 // SocialMediaAccount represents a talent's social media account.

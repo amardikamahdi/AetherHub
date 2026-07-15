@@ -120,6 +120,16 @@ func (r *InMemoryUserRepository) Update(user *models.User) error {
 	return nil
 }
 
+// CreateUser is an alias for Create to satisfy the UserService interface.
+func (r *InMemoryUserRepository) CreateUser(user *models.User) error {
+	return r.Create(user)
+}
+
+// GetUserByEmail is an alias for GetByEmail to satisfy the UserService interface.
+func (r *InMemoryUserRepository) GetUserByEmail(email string) (*models.User, error) {
+	return r.GetByEmail(email)
+}
+
 // Delete soft-deletes a user by setting DeletedAt.
 func (r *InMemoryUserRepository) Delete(id string) error {
 	r.mu.Lock()
