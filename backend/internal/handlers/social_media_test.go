@@ -79,7 +79,8 @@ func TestSocialMediaHandler_Create(t *testing.T) {
 			"username": "@newuser",
 		})
 
-		req := httptest.NewRequest(http.MethodPost, "/api/talents/talent-1/social-media", bytes.NewReader(body))
+		// Use user-1 as talentId to match mock middleware userID
+		req := httptest.NewRequest(http.MethodPost, "/api/talents/user-1/social-media", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		resp, _ := app.Test(req)
 
@@ -102,7 +103,7 @@ func TestSocialMediaHandler_Create(t *testing.T) {
 			"username": "@user",
 		})
 
-		req := httptest.NewRequest(http.MethodPost, "/api/talents/talent-1/social-media", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/talents/user-1/social-media", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		resp, _ := app.Test(req)
 
@@ -116,7 +117,7 @@ func TestSocialMediaHandler_Create(t *testing.T) {
 			"platform": "instagram",
 		})
 
-		req := httptest.NewRequest(http.MethodPost, "/api/talents/talent-1/social-media", bytes.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/talents/user-1/social-media", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		resp, _ := app.Test(req)
 

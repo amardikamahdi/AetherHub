@@ -25,6 +25,9 @@ func (h *TalentHandler) List(c *fiber.Ctx) error {
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	limit, _ := strconv.Atoi(c.Query("limit", "20"))
 
+	if offset < 0 {
+		offset = 0
+	}
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
@@ -130,13 +133,16 @@ func (h *TalentHandler) Create(c *fiber.Ctx) error {
 func (h *TalentHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	talent, err := h.repo.GetByID(id)
+	existing, err := h.repo.GetByID(id)
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"success": false,
 			"error":   "Talent not found",
 		})
 	}
+
+	// Deep copy to avoid mutating the live map entry (data race)
+	talent := *existing
 
 	var req models.UpdateTalentRequest
 
@@ -173,7 +179,7 @@ func (h *TalentHandler) Update(c *fiber.Ctx) error {
 		talent.Bio = req.Bio
 	}
 
-	if err := h.repo.Update(talent); err != nil {
+	if err := h.repo.Update(&talent); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   "Failed to update talent",

@@ -24,7 +24,7 @@ func main() {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "default-secret-change-me"
+		log.Fatal("JWT_SECRET environment variable is required")
 	}
 
 	port := os.Getenv("PORT")
@@ -77,7 +77,13 @@ func main() {
 
 	// Auth - authenticated
 	protected.Get("/auth/me", func(c *fiber.Ctx) error {
-		userID := c.Locals("userID").(string)
+		userID, ok := c.Locals("userID").(string)
+		if !ok {
+			return c.Status(401).JSON(fiber.Map{
+				"success": false,
+				"error":   "Unauthorized",
+			})
+		}
 		user, err := userRepo.GetByID(userID)
 		if err != nil {
 			return c.Status(404).JSON(fiber.Map{
@@ -132,16 +138,27 @@ func seedSuperAdmin(repo repository.UserRepository) {
 		}
 	}
 
-	// Create default superadmin
-	hash, err := utils.HashPassword("admin123")
+	// Get seed password from environment or generate random
+	seedPassword := os.Getenv("SEED_ADMIN_PASSWORD")
+	if seedPassword == "" {
+		seedPassword = uuid.New().String()[:12]
+		log.Printf("WARNING: SEED_ADMIN_PASSWORD not set. Generated random password. Set SEED_ADMIN_PASSWORD env var for persistence.")
+	}
+
+	hash, err := utils.HashPassword(seedPassword)
 	if err != nil {
 		log.Printf("Warning: failed to hash superadmin password: %v", err)
 		return
 	}
 
+	adminEmail := os.Getenv("SEED_ADMIN_EMAIL")
+	if adminEmail == "" {
+		adminEmail = "admin@aetherhub.com"
+	}
+
 	superadmin := &models.User{
 		ID:           uuid.New().String(),
-		Email:        "admin@aetherhub.com",
+		Email:        adminEmail,
 		PasswordHash: hash,
 		Name:         "Super Admin",
 		Role:         models.RoleSuperadmin,
@@ -150,6 +167,6 @@ func seedSuperAdmin(repo repository.UserRepository) {
 	if err := repo.Create(superadmin); err != nil {
 		log.Printf("Warning: failed to seed superadmin: %v", err)
 	} else {
-		log.Println("Default superadmin created: admin@aetherhub.com / admin123")
+		log.Printf("Default superadmin created. Email: %s — check SEED_ADMIN_PASSWORD env var for credentials.", adminEmail)
 	}
 }

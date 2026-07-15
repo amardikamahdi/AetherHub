@@ -27,6 +27,9 @@ func (h *UserHandler) List(c *fiber.Ctx) error {
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	limit, _ := strconv.Atoi(c.Query("limit", "20"))
 
+	if offset < 0 {
+		offset = 0
+	}
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
@@ -150,13 +153,16 @@ func (h *UserHandler) GetByID(c *fiber.Ctx) error {
 func (h *UserHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	user, err := h.repo.GetByID(id)
+	existing, err := h.repo.GetByID(id)
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"success": false,
 			"error":   "User not found",
 		})
 	}
+
+	// Deep copy to avoid mutating the live map entry (data race)
+	user := *existing
 
 	var req struct {
 		Name  string `json:"name"`
@@ -200,7 +206,7 @@ func (h *UserHandler) Update(c *fiber.Ctx) error {
 		user.Name = req.Name
 	}
 
-	if err := h.repo.Update(user); err != nil {
+	if err := h.repo.Update(&user); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   "Failed to update user",

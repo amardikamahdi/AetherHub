@@ -41,6 +41,22 @@ func (h *SocialMediaHandler) ListByTalentID(c *fiber.Ctx) error {
 func (h *SocialMediaHandler) Create(c *fiber.Ctx) error {
 	talentID := c.Params("talentId")
 
+	// Check ownership — only the owning talent or admin can create
+	userID, ok := c.Locals("userID").(string)
+	if !ok {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   "Unauthorized",
+		})
+	}
+	role, _ := c.Locals("role").(string)
+	if role != models.RoleAdmin && role != models.RoleSuperadmin && talentID != userID {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"success": false,
+			"error":   "You can only add social media to your own profile",
+		})
+	}
+
 	var req models.CreateSocialMediaRequest
 
 	if err := c.BodyParser(&req); err != nil {
@@ -91,13 +107,16 @@ func (h *SocialMediaHandler) Create(c *fiber.Ctx) error {
 func (h *SocialMediaHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	account, err := h.repo.GetByID(id)
+	existing, err := h.repo.GetByID(id)
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"success": false,
 			"error":   "Social media account not found",
 		})
 	}
+
+	// Deep copy to avoid mutating the live map entry (data race)
+	account := *existing
 
 	// Check ownership
 	userID, ok := c.Locals("userID").(string)
@@ -133,7 +152,7 @@ func (h *SocialMediaHandler) Update(c *fiber.Ctx) error {
 		account.URL = req.URL
 	}
 
-	if err := h.repo.Update(account); err != nil {
+	if err := h.repo.Update(&account); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   "Failed to update social media account",
