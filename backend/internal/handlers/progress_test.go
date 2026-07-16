@@ -255,3 +255,83 @@ func TestProgressHandler_UpdateStep(t *testing.T) {
 		}
 	})
 }
+
+func TestProgressHandler_UpdateStep_AdminAccess(t *testing.T) {
+	progressRepo := repository.NewInMemoryProgressRepository()
+	assignRepo := repository.NewInMemoryAssignmentRepository()
+	handler := NewProgressHandler(progressRepo, assignRepo)
+
+	// Seed assignment
+	assignRepo.Assign(&models.JobAssignment{
+		ID:            "assign-1",
+		JobID:         "job-1",
+		SocialMediaID: "sm-1",
+		TalentID:      "talent-1",
+		Platform:      "instagram",
+		Username:      "@alice",
+	})
+
+	// Seed progress
+	progressRepo.Create(&models.AssignmentProgress{
+		AssignmentID: "assign-1",
+		JobID:        "job-1",
+		TalentID:     "talent-1",
+		Steps:        repository.InitializeSteps(),
+	})
+
+	t.Run("admin can update progress without panic", func(t *testing.T) {
+		// Create app where admin user has NO talent_id set
+		app := fiber.New()
+		app.Use(func(c *fiber.Ctx) error {
+			c.Locals("userID", "admin-1")
+			c.Locals("role", models.RoleAdmin)
+			// Do NOT set talent_id - this is the bug scenario
+			return c.Next()
+		})
+		app.Put("/api/progress/:assignment_id/step", handler.UpdateStep)
+
+		body, _ := json.Marshal(map[string]string{
+			"step": "absen",
+		})
+
+		req := httptest.NewRequest(http.MethodPut, "/api/progress/assign-1/step", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		// Should NOT panic - this is the bug we're fixing
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed with error: %v", err)
+		}
+
+		// Admin should be able to update (or get a proper error, not a panic)
+		if resp.StatusCode == http.StatusInternalServerError {
+			t.Errorf("expected non-500 status for admin, got %d (likely panic)", resp.StatusCode)
+		}
+	})
+
+	t.Run("superadmin can update progress without panic", func(t *testing.T) {
+		app := fiber.New()
+		app.Use(func(c *fiber.Ctx) error {
+			c.Locals("userID", "superadmin-1")
+			c.Locals("role", models.RoleSuperadmin)
+			return c.Next()
+		})
+		app.Put("/api/progress/:assignment_id/step", handler.UpdateStep)
+
+		body, _ := json.Marshal(map[string]string{
+			"step": "draft_storyline",
+		})
+
+		req := httptest.NewRequest(http.MethodPut, "/api/progress/assign-1/step", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed with error: %v", err)
+		}
+
+		if resp.StatusCode == http.StatusInternalServerError {
+			t.Errorf("expected non-500 status for superadmin, got %d (likely panic)", resp.StatusCode)
+		}
+	})
+}

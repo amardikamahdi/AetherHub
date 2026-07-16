@@ -50,10 +50,10 @@ Kami percaya **AetherHub** akan **menyelesaikan masalah management job dan talen
 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Auth & User Management | Superadmin, Admin, Talent bisa register/login dengan role masing-masing | pending | — |
-| 2 | Talent Management | Admin bisa CRUD talent dan talent bisa tambah akun sosmed mereka | pending | — |
-| 3 | Job Management | Admin bisa CRUD job dan assign akun sosmed talent ke job | pending | — |
-| 4 | Dashboard & Progress Tracking | Admin bisa pantau progress, talent bisa update progress job mereka | pending | — |
+| 1 | Auth & User Management | Superadmin, Admin, Talent bisa register/login dengan role masing-masing | ✅ complete | `.claude/plans/milestone-1-auth-user-management.md` |
+| 2 | Talent Management | Admin bisa CRUD talent dan talent bisa tambah akun sosmed mereka | ✅ complete | `.claude/PRPs/plans/milestone-2-talent-management.plan.md` |
+| 3 | Job Management | Admin bisa CRUD job dan assign akun sosmed talent ke job | ✅ complete | `.claude/PRPs/plans/milestone-3-job-management.plan.md` |
+| 4 | Dashboard & Progress Tracking | Admin bisa pantau progress, talent bisa update progress job mereka | ✅ complete | `.claude/PRPs/plans/completed/milestone-4-progress-tracking.plan.md` |
 
 ## Open Questions
 
@@ -73,4 +73,4 @@ Kami percaya **AetherHub** akan **menyelesaikan masalah management job dan talen
 | Scalability jika talent >1000 | Low | Medium | Gunakan pagination, indexing yang tepat dari awal |
 
 ---
-*Status: DRAFT — requirements only. Implementation planning pending via /plan.*
+*Status: MVP COMPLETE — All 4 milestones implemented and merged. Next: define Milestone 5 or enhancements.*

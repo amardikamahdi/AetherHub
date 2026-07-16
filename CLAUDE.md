@@ -60,8 +60,11 @@ aetherhub/
 ## Project Status
 
 - PRD: `.claude/prds/aetherhub-job-talent-management.prd.md`
-- Active Plan: `.claude/plans/milestone-1-auth-user-management.md`
-- Current Milestone: Auth & User Management
+- Status: **MVP Complete** — All 4 milestones implemented and merged
+- Milestone 1: Auth & User Management ✅
+- Milestone 2: Talent Management ✅
+- Milestone 3: Job Management ✅
+- Milestone 4: Dashboard & Progress Tracking ✅
 
 ## Key Workflows
 
