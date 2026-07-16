@@ -2,6 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CheckCircle2, Circle } from 'lucide-react'
 
 interface StepState {
   step: string
@@ -46,12 +57,10 @@ export function ProgressTable({ jobId, refreshKey }: ProgressTableProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load assignments
         const assignRes = await apiClient.listAssignmentsByJob(jobId)
         const jobAssignments: Assignment[] = assignRes.data || []
         setAssignments(jobAssignments)
 
-        // Load progress for each assignment
         const progressEntries: Record<string, AssignmentProgress> = {}
         for (const assignment of jobAssignments) {
           try {
@@ -73,11 +82,17 @@ export function ProgressTable({ jobId, refreshKey }: ProgressTableProps) {
   }, [jobId, refreshKey])
 
   if (isLoading) {
-    return <p className="text-gray-500 text-sm">Loading progress...</p>
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
   }
 
   if (assignments.length === 0) {
-    return <p className="text-gray-500 text-sm">No assignments for this job.</p>
+    return <p className="text-sm text-muted-foreground">No assignments for this job.</p>
   }
 
   const getStepStatus = (assignmentId: string, step: string): string => {
@@ -88,44 +103,40 @@ export function ProgressTable({ jobId, refreshKey }: ProgressTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-50 text-left text-sm">
-            <th className="p-3 font-medium">Platform</th>
-            <th className="p-3 font-medium">Username</th>
-            {STEP_COLUMNS.map((step) => (
-              <th key={step} className="p-3 font-medium text-center">
-                {STEP_LABELS[step]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {assignments.map((assignment) => (
-            <tr key={assignment.id} className="border-b hover:bg-gray-50">
-              <td className="p-3 text-sm">{assignment.platform}</td>
-              <td className="p-3 text-sm">{assignment.username}</td>
-              {STEP_COLUMNS.map((step) => {
-                const status = getStepStatus(assignment.id, step)
-                return (
-                  <td key={step} className="p-3 text-center">
-                    <span
-                      className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
-                        status === 'completed'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
-                      {status === 'completed' ? '✓' : '—'}
-                    </span>
-                  </td>
-                )
-              })}
-            </tr>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Platform</TableHead>
+          <TableHead>Username</TableHead>
+          {STEP_COLUMNS.map((step) => (
+            <TableHead key={step} className="text-center">
+              {STEP_LABELS[step]}
+            </TableHead>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {assignments.map((assignment) => (
+          <TableRow key={assignment.id}>
+            <TableCell>
+              <Badge variant="secondary">{assignment.platform}</Badge>
+            </TableCell>
+            <TableCell className="font-medium">{assignment.username}</TableCell>
+            {STEP_COLUMNS.map((step) => {
+              const status = getStepStatus(assignment.id, step)
+              return (
+                <TableCell key={step} className="text-center">
+                  {status === 'completed' ? (
+                    <CheckCircle2 className="mx-auto size-5 text-green-500" />
+                  ) : (
+                    <Circle className="mx-auto size-5 text-muted-foreground/30" />
+                  )}
+                </TableCell>
+              )
+            })}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }

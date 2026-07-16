@@ -16,6 +16,15 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/admin/dashboard',
 }))
 
+// Mock next/link
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: React.ComponentProps<'a'>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
+
 describe('AdminLayout', () => {
   const adminUser = {
     id: '1',
@@ -43,7 +52,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Jobs')).toBeInTheDocument()
     expect(screen.getByText('Talents')).toBeInTheDocument()
-    expect(screen.getByText('Settings')).toBeInTheDocument()
+    expect(screen.getByText('Users')).toBeInTheDocument()
   })
 
   it('renders navigation links with correct hrefs', () => {
@@ -56,7 +65,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/admin/dashboard')
     expect(screen.getByText('Jobs').closest('a')).toHaveAttribute('href', '/admin/jobs')
     expect(screen.getByText('Talents').closest('a')).toHaveAttribute('href', '/admin/talents')
-    expect(screen.getByText('Settings').closest('a')).toHaveAttribute('href', '/admin/settings')
+    expect(screen.getByText('Users').closest('a')).toHaveAttribute('href', '/admin/users')
   })
 
   it('displays user name and role', () => {
@@ -133,20 +142,21 @@ describe('AdminLayout', () => {
     expect(mockPush).toHaveBeenCalledWith('/login')
   })
 
-  it('shows loading state while auth is loading', () => {
+  it('shows skeleton loading state while auth is loading', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       isLoading: true,
       logout: vi.fn(),
     })
 
-    render(
+    const { container } = render(
       <AdminLayout>
         <div>Child content</div>
       </AdminLayout>
     )
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    // Skeleton components are rendered during loading
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeInTheDocument()
   })
 
   it('allows superadmin role access', () => {

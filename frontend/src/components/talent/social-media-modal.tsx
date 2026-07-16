@@ -1,6 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface SocialMediaAccount {
   id: string
@@ -36,91 +54,72 @@ export function SocialMediaModal({ isOpen, onClose, onSubmit, account }: SocialM
     }
   }, [account, isOpen])
 
-  if (!isOpen) return null
-
   const isEditMode = !!account
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!platform || !username) return
-
     onSubmit({ platform, username, url })
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4">
-          {isEditMode ? 'Edit Social Media' : 'Add Social Media'}
-        </h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Social Media' : 'Add Social Media'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Update your social media account.' : 'Add a new social media account.'}
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="sm-platform" className="block text-sm font-medium text-gray-700">
-              Platform
-            </label>
-            <select
-              id="sm-platform"
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              disabled={isEditMode}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              {PLATFORMS.map((p) => (
-                <option key={p} value={p}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </option>
-              ))}
-            </select>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sm-platform">Platform</Label>
+            <Select value={platform} onValueChange={(v) => setPlatform(v ?? "instagram")} disabled={isEditMode}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORMS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label htmlFor="sm-username" className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sm-username">Username</Label>
+            <Input
               id="sm-username"
-              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder="@yourusername"
             />
           </div>
 
-          <div>
-            <label htmlFor="sm-url" className="block text-sm font-medium text-gray-700">
-              URL
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sm-url">URL</Label>
+            <Input
               id="sm-url"
-              type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Optional"
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
+            </Button>
+            <Button type="submit">
               {isEditMode ? 'Save' : 'Add'}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

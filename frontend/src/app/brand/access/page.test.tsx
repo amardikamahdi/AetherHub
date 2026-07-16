@@ -24,7 +24,7 @@ describe('BrandAccessPage', () => {
 
   it('renders the brand access heading', () => {
     render(<BrandAccessPage />)
-    expect(screen.getByRole('heading', { name: /brand access/i })).toBeInTheDocument()
+    expect(screen.getByText('Brand Access')).toBeInTheDocument()
   })
 
   it('renders a code input field', () => {

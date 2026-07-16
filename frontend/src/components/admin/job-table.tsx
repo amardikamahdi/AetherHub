@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Edit, UserPlus, Trash2 } from 'lucide-react'
 
 interface Job {
   id: string
@@ -21,11 +33,11 @@ interface JobTableProps {
 
 const PAGE_SIZE = 20
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  active: 'bg-green-100 text-green-700',
-  completed: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-red-100 text-red-700',
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  draft: 'secondary',
+  active: 'default',
+  completed: 'outline',
+  cancelled: 'destructive',
 }
 
 export function JobTable({ onEdit, onDelete, onAssign, refreshKey }: JobTableProps) {
@@ -49,83 +61,82 @@ export function JobTable({ onEdit, onDelete, onAssign, refreshKey }: JobTablePro
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading...</p>
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
   }
 
   if (jobs.length === 0) {
-    return <p className="text-gray-500">No jobs found</p>
+    return <p className="text-sm text-muted-foreground">No jobs found</p>
   }
 
   return (
-    <div>
-      {/* Table */}
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 text-left text-sm">
-            <th className="p-3 font-medium">Title</th>
-            <th className="p-3 font-medium">Brand</th>
-            <th className="p-3 font-medium">Status</th>
-            <th className="p-3 font-medium">Deadline</th>
-            <th className="p-3 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="flex flex-col gap-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Brand</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Deadline</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {jobs.map((job) => (
-            <tr key={job.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">{job.title}</td>
-              <td className="p-3">{job.brand_name}</td>
-              <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[job.status] || 'bg-gray-100 text-gray-700'}`}>
+            <TableRow key={job.id}>
+              <TableCell className="font-medium">{job.title}</TableCell>
+              <TableCell>{job.brand_name}</TableCell>
+              <TableCell>
+                <Badge variant={STATUS_VARIANT[job.status] || 'secondary'}>
                   {job.status}
-                </span>
-              </td>
-              <td className="p-3">{job.deadline ? new Date(job.deadline).toLocaleDateString() : '-'}</td>
-              <td className="p-3 space-x-2">
-                <button
-                  onClick={() => onEdit?.(job)}
-                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onAssign?.(job)}
-                  className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded"
-                >
-                  Assign
-                </button>
-                <button
-                  onClick={() => onDelete?.(job)}
-                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
+                </Badge>
+              </TableCell>
+              <TableCell>{job.deadline ? new Date(job.deadline).toLocaleDateString() : '-'}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="icon-sm" onClick={() => onEdit?.(job)} aria-label="Edit">
+                    <Edit />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => onAssign?.(job)} aria-label="Assign">
+                    <UserPlus />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => onDelete?.(job)} aria-label="Delete">
+                    <Trash2 />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
             Page {page + 1} of {totalPages}
           </p>
-          <div className="space-x-2">
-            <button
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
               Previous
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

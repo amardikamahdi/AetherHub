@@ -34,7 +34,7 @@ describe('TalentLayout', () => {
   })
 
   it('renders header with app name', () => {
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -44,7 +44,7 @@ describe('TalentLayout', () => {
   })
 
   it('displays user name', () => {
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -54,7 +54,7 @@ describe('TalentLayout', () => {
   })
 
   it('renders children content', () => {
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -64,7 +64,7 @@ describe('TalentLayout', () => {
   })
 
   it('has a logout button', () => {
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -81,7 +81,7 @@ describe('TalentLayout', () => {
       logout: mockLogout,
     })
 
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -100,7 +100,7 @@ describe('TalentLayout', () => {
       logout: vi.fn(),
     })
 
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -116,7 +116,7 @@ describe('TalentLayout', () => {
       logout: vi.fn(),
     })
 
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
@@ -132,12 +132,13 @@ describe('TalentLayout', () => {
       logout: vi.fn(),
     })
 
-    render(
+    const { container } = render(
       <TalentLayout>
         <div>Child content</div>
       </TalentLayout>
     )
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    // Skeleton components are rendered during loading
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeInTheDocument()
   })
 })

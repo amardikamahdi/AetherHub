@@ -1,6 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface User {
   id: string
@@ -36,104 +54,84 @@ export function UserModal({ isOpen, onClose, onSubmit, user }: UserModalProps) {
     }
   }, [user, isOpen])
 
-  if (!isOpen) return null
-
   const isEditMode = !!user
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!name || !email || !role) return
     if (!isEditMode && !password) return
-
     onSubmit({ name, email, password, role })
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4">
-          {isEditMode ? 'Edit User' : 'Create User'}
-        </h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit User' : 'Create User'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Update the user details below.' : 'Fill in the details to create a new user.'}
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="user-name" className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
-            <input
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="user-name">Name</Label>
+            <Input
               id="user-name"
-              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
-          <div>
-            <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="user-email">Email</Label>
+            <Input
               id="user-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
-          <div>
-            <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="user-password">Password</Label>
+            <Input
               id="user-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required={!isEditMode}
               minLength={isEditMode ? undefined : 6}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder={isEditMode ? 'Leave blank to keep current' : ''}
             />
           </div>
 
-          <div>
-            <label htmlFor="user-role" className="block text-sm font-medium text-gray-700">
-              Role
-            </label>
-            <select
-              id="user-role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="admin">Admin</option>
-              <option value="talent">Talent</option>
-              <option value="superadmin">Superadmin</option>
-            </select>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="user-role">Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v ?? "talent")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="talent">Talent</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
+            </Button>
+            <Button type="submit">
               {isEditMode ? 'Save' : 'Create'}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

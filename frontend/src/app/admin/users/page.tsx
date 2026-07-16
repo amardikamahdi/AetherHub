@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { UserTable } from '@/components/admin/user-table'
 import { UserModal } from '@/components/admin/user-modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Button } from '@/components/ui/button'
 import { apiClient } from '@/lib/api'
+import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 
 interface User {
   id: string
@@ -17,6 +21,7 @@ export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null)
 
   const handleCreate = () => {
     setEditingUser(undefined)
@@ -37,37 +42,41 @@ export default function UsersPage() {
       }
       setIsModalOpen(false)
       setRefreshKey((k) => k + 1)
+      toast.success(editingUser ? 'User updated' : 'User created')
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save user')
+      toast.error(error instanceof Error ? error.message : 'Failed to save user')
     }
   }
 
-  const handleDelete = async (user: User) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return
-    }
+  const handleDelete = (user: User) => {
+    setDeleteConfirm(user)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return
     try {
-      await apiClient.deleteUser(user.id)
+      await apiClient.deleteUser(deleteConfirm.id)
       setRefreshKey((k) => k + 1)
+      toast.success('User deleted')
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete user')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user')
+    } finally {
+      setDeleteConfirm(null)
     }
   }
 
   return (
     <AdminLayout>
-      <div>
-        <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">User Management</h1>
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
+          <Button onClick={handleCreate}>
+            <Plus />
             Create User
-          </button>
+          </Button>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="rounded-lg border bg-card p-6">
           <UserTable key={refreshKey} onEdit={handleEdit} onDelete={handleDelete} />
         </div>
 
@@ -76,6 +85,15 @@ export default function UsersPage() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={handleSubmit}
           user={editingUser}
+        />
+
+        <ConfirmDialog
+          open={!!deleteConfirm}
+          onOpenChange={(open) => !open && setDeleteConfirm(null)}
+          title="Delete User"
+          description={`Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`}
+          onConfirm={confirmDelete}
+          confirmText="Delete"
         />
       </div>
     </AdminLayout>

@@ -4,11 +4,21 @@ import { useEffect, ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+import {
+  LayoutDashboard,
+  Share2,
+  Briefcase,
+  LogOut,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/talent/dashboard' },
-  { label: 'Social Media', href: '/talent/social-media' },
-  { label: 'My Jobs', href: '/talent/jobs' },
+  { label: 'Dashboard', href: '/talent/dashboard', icon: LayoutDashboard },
+  { label: 'My Jobs', href: '/talent/jobs', icon: Briefcase },
+  { label: 'Social Media', href: '/talent/social-media', icon: Share2 },
 ]
 
 interface TalentLayoutProps {
@@ -28,8 +38,11 @@ export function TalentLayout({ children }: TalentLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex min-h-svh items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="size-12 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
       </div>
     )
   }
@@ -43,35 +56,55 @@ export function TalentLayout({ children }: TalentLayoutProps) {
     router.push('/login')
   }
 
+  const initials = user.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-svh flex-col">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">AetherHub</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.name}</span>
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 border rounded-md"
-            >
-              Logout
-            </button>
+      <header className="sticky top-0 z-10 border-b bg-background">
+        <div className="flex h-14 items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Briefcase className="size-4" />
+            </div>
+            <span className="text-lg font-semibold">AetherHub</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Avatar className="size-8">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{user.name}</span>
+            </div>
+            <Separator orientation="vertical" className="h-6" />
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut />
+              <span>Logout</span>
+            </Button>
           </div>
         </div>
-        <nav className="mt-2 flex gap-4">
+
+        {/* Navigation tabs */}
+        <nav className="flex gap-1 px-6">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium ${
+                className={`flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:border-muted-foreground hover:text-foreground'
                 }`}
               >
+                <item.icon className="size-4" />
                 {item.label}
               </Link>
             )
@@ -80,9 +113,7 @@ export function TalentLayout({ children }: TalentLayoutProps) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 bg-gray-50 p-8">
-        {children}
-      </main>
+      <main className="flex-1 bg-muted/50 p-6">{children}</main>
     </div>
   )
 }

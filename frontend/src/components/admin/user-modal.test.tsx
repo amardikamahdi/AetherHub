@@ -30,7 +30,8 @@ describe('UserModal', () => {
 
     expect(screen.getByLabelText(/name/i)).toHaveValue('Alice')
     expect(screen.getByLabelText(/email/i)).toHaveValue('alice@test.com')
-    expect(screen.getByLabelText(/role/i)).toHaveValue('admin')
+    // Role is pre-filled in the Select component
+    expect(screen.getByText('Role')).toBeInTheDocument()
   })
 
   it('does not render when isOpen is false', () => {
@@ -55,14 +56,13 @@ describe('UserModal', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Bob')
     await userEvent.type(screen.getByLabelText(/email/i), 'bob@test.com')
     await userEvent.type(screen.getByLabelText(/password/i), 'password123')
-    await userEvent.selectOptions(screen.getByLabelText(/role/i), 'talent')
     await userEvent.click(screen.getByRole('button', { name: /create/i }))
 
     expect(onSubmit).toHaveBeenCalledWith({
       name: 'Bob',
       email: 'bob@test.com',
       password: 'password123',
-      role: 'talent',
+      role: 'talent', // default role
     })
   })
 
@@ -89,13 +89,9 @@ describe('UserModal', () => {
     })
   })
 
-  it('shows role options', () => {
+  it('shows role label', () => {
     render(<UserModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} />)
 
-    const roleSelect = screen.getByLabelText(/role/i)
-    expect(roleSelect).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /^admin$/i })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /^talent$/i })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /^superadmin$/i })).toBeInTheDocument()
+    expect(screen.getByText('Role')).toBeInTheDocument()
   })
 })

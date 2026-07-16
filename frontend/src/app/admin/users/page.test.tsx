@@ -49,7 +49,6 @@ describe('UsersPage', () => {
     mockCreateUser.mockResolvedValue({ success: true, data: { id: '3' } })
     mockUpdateUser.mockResolvedValue({ success: true, data: { id: '1' } })
     mockDeleteUser.mockResolvedValue({ success: true })
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   it('calls apiClient.createUser when creating a new user', async () => {
@@ -61,13 +60,12 @@ describe('UsersPage', () => {
     // Open create modal
     await userEvent.click(screen.getByRole('button', { name: /create user/i }))
 
-    // Fill form using the modal's specific label (exact match for "Role", not "Filter by role")
+    // Fill form
     await userEvent.type(screen.getByLabelText('Name'), 'Charlie')
     await userEvent.type(screen.getByLabelText('Email'), 'charlie@test.com')
     await userEvent.type(screen.getByLabelText('Password'), 'password123')
-    await userEvent.selectOptions(screen.getByLabelText('Role'), 'talent')
 
-    // Submit using the form submit button
+    // Submit using the form submit button (role defaults to 'talent')
     await userEvent.click(screen.getByRole('button', { name: /^create$/i }))
 
     // Verify API was called
@@ -122,8 +120,9 @@ describe('UsersPage', () => {
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
 
-    // Verify confirmation was shown
-    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this user?')
+    // Confirm the AlertDialog
+    const confirmButton = await screen.findByRole('button', { name: /delete/i })
+    await userEvent.click(confirmButton)
 
     // Verify API was called
     await waitFor(() => {
@@ -132,8 +131,6 @@ describe('UsersPage', () => {
   })
 
   it('does not call deleteUser when confirmation is cancelled', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
-
     render(<UsersPage />)
 
     // Wait for table to load
@@ -142,6 +139,10 @@ describe('UsersPage', () => {
     // Click delete on first user
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
+
+    // Cancel the AlertDialog
+    const cancelButton = await screen.findByRole('button', { name: /cancel/i })
+    await userEvent.click(cancelButton)
 
     // Verify API was NOT called
     expect(mockDeleteUser).not.toHaveBeenCalled()
@@ -177,6 +178,10 @@ describe('UsersPage', () => {
     // Click delete
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
+
+    // Confirm the AlertDialog
+    const confirmButton = await screen.findByRole('button', { name: /delete/i })
+    await userEvent.click(confirmButton)
 
     // Verify list was refreshed
     await waitFor(() => {
