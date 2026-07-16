@@ -28,6 +28,14 @@ go test ./...                # Run tests
 go vet ./...                 # Lint
 ```
 
+### Docker
+```bash
+docker compose up -d         # Start all services
+docker compose down          # Stop all services
+docker compose logs -f       # View logs
+docker compose build         # Rebuild images
+```
+
 ## Architecture
 
 ```
