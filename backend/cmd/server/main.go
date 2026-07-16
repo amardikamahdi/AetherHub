@@ -140,7 +140,9 @@ func main() {
 	// Job assignments - admin only
 	jobs.Post("/:jobId/assignments", assignmentHandler.Assign)
 	jobs.Get("/:jobId/assignments", assignmentHandler.ListByJobID)
-	protected.Delete("/assignments/:id", assignmentHandler.Unassign)
+	protected.Delete("/assignments/:id",
+		middleware.RoleMiddleware(models.RoleAdmin, models.RoleSuperadmin),
+		assignmentHandler.Unassign)
 
 	// Progress tracking - talent and admin
 	progress := protected.Group("/progress")

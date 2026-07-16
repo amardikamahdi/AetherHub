@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/amardikamahdi/AetherHub/internal/middleware"
 	"github.com/amardikamahdi/AetherHub/internal/models"
 	"github.com/amardikamahdi/AetherHub/internal/repository"
 	"github.com/gofiber/fiber/v2"
@@ -196,6 +197,76 @@ func TestAssignmentHandler_Unassign(t *testing.T) {
 
 		if resp.StatusCode != http.StatusNotFound {
 			t.Errorf("expected status 404, got %d", resp.StatusCode)
+		}
+	})
+}
+
+func TestAssignmentHandler_Unassign_RoleEnforcement(t *testing.T) {
+	app := fiber.New()
+	jobRepo := repository.NewInMemoryJobRepository()
+	smRepo := repository.NewInMemorySocialMediaRepository()
+	assignRepo := repository.NewInMemoryAssignmentRepository()
+	handler := NewAssignmentHandler(assignRepo, jobRepo, smRepo)
+
+	// Seed assignments for each test case
+	assignRepo.Assign(&models.JobAssignment{
+		ID:            "assign-talent",
+		JobID:         "job-1",
+		SocialMediaID: "sm-1",
+		TalentID:      "talent-1",
+	})
+	assignRepo.Assign(&models.JobAssignment{
+		ID:            "assign-admin",
+		JobID:         "job-1",
+		SocialMediaID: "sm-2",
+		TalentID:      "talent-2",
+	})
+	assignRepo.Assign(&models.JobAssignment{
+		ID:            "assign-super",
+		JobID:         "job-1",
+		SocialMediaID: "sm-3",
+		TalentID:      "talent-3",
+	})
+
+	// Add role middleware that restricts to admin/superadmin
+	app.Delete("/api/assignments/:id",
+		func(c *fiber.Ctx) error {
+			// Simulate auth middleware setting userID and role
+			c.Locals("userID", "user-1")
+			c.Locals("role", c.Get("X-Test-Role"))
+			return c.Next()
+		},
+		middleware.RoleMiddleware(models.RoleAdmin, models.RoleSuperadmin),
+		handler.Unassign,
+	)
+
+	t.Run("admin can unassign", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodDelete, "/api/assignments/assign-admin", nil)
+		req.Header.Set("X-Test-Role", models.RoleAdmin)
+		resp, _ := app.Test(req)
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200 for admin, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("superadmin can unassign", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodDelete, "/api/assignments/assign-super", nil)
+		req.Header.Set("X-Test-Role", models.RoleSuperadmin)
+		resp, _ := app.Test(req)
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200 for superadmin, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("talent cannot unassign", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodDelete, "/api/assignments/assign-talent", nil)
+		req.Header.Set("X-Test-Role", models.RoleTalent)
+		resp, _ := app.Test(req)
+
+		if resp.StatusCode != http.StatusForbidden {
+			t.Errorf("expected status 403 for talent, got %d", resp.StatusCode)
 		}
 	})
 }

@@ -100,13 +100,16 @@ func (h *ProgressHandler) UpdateStep(c *fiber.Ctx) error {
 		})
 	}
 
-	// Verify talent owns assignment
-	talentID := c.Locals("talent_id").(string)
-	if assignment.TalentID != talentID {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{
-			"success": false,
-			"error":   "You can only update your own progress",
-		})
+	// Verify talent owns assignment (admins/superadmins can update any)
+	role, _ := c.Locals("role").(string)
+	talentID, hasTalentID := c.Locals("talent_id").(string)
+	if role != models.RoleAdmin && role != models.RoleSuperadmin {
+		if !hasTalentID || assignment.TalentID != talentID {
+			return c.Status(http.StatusForbidden).JSON(fiber.Map{
+				"success": false,
+				"error":   "You can only update your own progress",
+			})
+		}
 	}
 
 	// Get or create progress
