@@ -3,6 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { KeyRound } from 'lucide-react'
 
 export default function BrandAccessPage() {
   const [code, setCode] = useState('')
@@ -20,50 +26,48 @@ export default function BrandAccessPage() {
     try {
       await apiClient.validateBrandCode(code.trim())
       router.push(`/brand/dashboard/${code.trim()}`)
-    } catch (err: any) {
-      setError(err.message || 'Invalid code')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Invalid code')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h1 className="text-2xl font-bold text-center">Brand Access</h1>
-          <p className="text-center text-gray-600">Enter your unique access code</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>
-          )}
-
-          <div>
-            <label htmlFor="access-code" className="block text-sm font-medium text-gray-700">
-              Access Code
-            </label>
-            <input
-              id="access-code"
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Enter your code"
-            />
+    <div className="flex min-h-svh items-center justify-center bg-muted/50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <KeyRound className="size-5" />
           </div>
+          <CardTitle className="text-2xl">Brand Access</CardTitle>
+          <CardDescription>Enter your unique access code</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isLoading ? 'Validating...' : 'Access'}
-          </button>
-        </form>
-      </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="access-code">Access Code</Label>
+              <Input
+                id="access-code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+                placeholder="Enter your code"
+              />
+            </div>
+
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? 'Validating...' : 'Access'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

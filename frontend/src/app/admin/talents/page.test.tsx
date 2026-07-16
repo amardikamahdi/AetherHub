@@ -49,7 +49,6 @@ describe('TalentsPage', () => {
     mockCreateTalent.mockResolvedValue({ success: true, data: { id: '3' } })
     mockUpdateTalent.mockResolvedValue({ success: true, data: { id: '1' } })
     mockDeleteTalent.mockResolvedValue({ success: true })
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   it('calls apiClient.createTalent when creating a new talent', async () => {
@@ -106,7 +105,9 @@ describe('TalentsPage', () => {
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
 
-    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this talent?')
+    // Confirm the AlertDialog
+    const confirmButton = await screen.findByRole('button', { name: /delete/i })
+    await userEvent.click(confirmButton)
 
     await waitFor(() => {
       expect(mockDeleteTalent).toHaveBeenCalledWith('1')
@@ -114,14 +115,16 @@ describe('TalentsPage', () => {
   })
 
   it('does not call deleteTalent when confirmation is cancelled', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
-
     render(<TalentsPage />)
 
     await screen.findByText('Alice')
 
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
+
+    // Cancel the AlertDialog
+    const cancelButton = await screen.findByRole('button', { name: /cancel/i })
+    await userEvent.click(cancelButton)
 
     expect(mockDeleteTalent).not.toHaveBeenCalled()
   })

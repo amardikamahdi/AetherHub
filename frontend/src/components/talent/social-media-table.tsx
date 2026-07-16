@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Edit, Trash2, ExternalLink } from 'lucide-react'
 
 interface SocialMediaAccount {
   id: string
@@ -23,6 +35,7 @@ export function SocialMediaTable({ talentId, onEdit, onDelete, refreshKey }: Soc
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    if (!talentId) return
     setIsLoading(true)
     apiClient
       .listSocialMedia(talentId)
@@ -34,60 +47,61 @@ export function SocialMediaTable({ talentId, onEdit, onDelete, refreshKey }: Soc
   }, [talentId, refreshKey])
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading...</p>
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
   }
 
   if (accounts.length === 0) {
-    return <p className="text-gray-500">No social media accounts found</p>
-  }
-
-  const capitalizePlatform = (platform: string) => {
-    return platform.charAt(0).toUpperCase() + platform.slice(1)
+    return <p className="text-sm text-muted-foreground">No social media accounts found</p>
   }
 
   return (
-    <div>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 text-left text-sm">
-            <th className="p-3 font-medium">Platform</th>
-            <th className="p-3 font-medium">Username</th>
-            <th className="p-3 font-medium">URL</th>
-            <th className="p-3 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accounts.map((account) => (
-            <tr key={account.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">{capitalizePlatform(account.platform)}</td>
-              <td className="p-3">{account.username}</td>
-              <td className="p-3">
-                {account.url ? (
-                  <a href={account.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    {account.url}
-                  </a>
-                ) : (
-                  '-'
-                )}
-              </td>
-              <td className="p-3 space-x-2">
-                <button
-                  onClick={() => onEdit?.(account)}
-                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete?.(account)}
-                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Platform</TableHead>
+          <TableHead>Username</TableHead>
+          <TableHead>URL</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {accounts.map((account) => (
+          <TableRow key={account.id}>
+            <TableCell>
+              <Badge variant="secondary">
+                {account.platform.charAt(0).toUpperCase() + account.platform.slice(1)}
+              </Badge>
+            </TableCell>
+            <TableCell className="font-medium">{account.username}</TableCell>
+            <TableCell>
+              {account.url ? (
+                <a href={account.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+                  <ExternalLink className="size-3" />
+                  Link
+                </a>
+              ) : (
+                '-'
+              )}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-1">
+                <Button variant="ghost" size="icon-sm" onClick={() => onEdit?.(account)} aria-label="Edit">
+                  <Edit />
+                </Button>
+                <Button variant="ghost" size="icon-sm" onClick={() => onDelete?.(account)} aria-label="Delete">
+                  <Trash2 />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }

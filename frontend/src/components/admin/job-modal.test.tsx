@@ -94,12 +94,13 @@ describe('JobModal', () => {
 
     render(<JobModal {...defaultProps} job={job} />)
 
-    expect(screen.getByLabelText(/status/i)).toBeInTheDocument()
+    // ShadCN Select uses a button trigger, not a native select
+    expect(screen.getByText('Status')).toBeInTheDocument()
   })
 
   it('does not show status select in create mode', () => {
     render(<JobModal {...defaultProps} />)
 
-    expect(screen.queryByLabelText(/status/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Status')).not.toBeInTheDocument()
   })
 })

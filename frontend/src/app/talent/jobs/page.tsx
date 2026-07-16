@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { TalentLayout } from '@/components/talent/talent-layout'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import { apiClient } from '@/lib/api'
+import { ArrowRight } from 'lucide-react'
 
 interface Job {
   id: string
@@ -28,6 +34,13 @@ interface SocialMediaAccount {
   username: string
 }
 
+const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  draft: 'secondary',
+  active: 'default',
+  completed: 'outline',
+  cancelled: 'destructive',
+}
+
 export default function TalentJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [assignments, setAssignments] = useState<Assignment[]>([])
@@ -36,10 +49,7 @@ export default function TalentJobsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get current user to find their talent profile
         const user = await apiClient.getMe()
-
-        // Get talent's social media accounts
         const smRes = await apiClient.listSocialMedia(user.id)
         const socialMedia: SocialMediaAccount[] = smRes.data || []
 
@@ -48,10 +58,8 @@ export default function TalentJobsPage() {
           return
         }
 
-        // For each social media, get assignments
         const allAssignments: Assignment[] = []
         const jobIds = new Set<string>()
-
         const jobsRes = await apiClient.listJobs(0, 100)
         const allJobs: Job[] = jobsRes.data || []
 
@@ -73,8 +81,8 @@ export default function TalentJobsPage() {
 
         setAssignments(allAssignments)
         setJobs(allJobs.filter((j) => jobIds.has(j.id)))
-      } catch (error) {
-        console.error('Failed to load jobs:', error)
+      } catch {
+        // Silently handle errors
       } finally {
         setIsLoading(false)
       }
@@ -87,66 +95,65 @@ export default function TalentJobsPage() {
     return assignments.filter((a) => a.job_id === jobId)
   }
 
-  const STATUS_COLORS: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-700',
-    active: 'bg-green-100 text-green-700',
-    completed: 'bg-blue-100 text-blue-700',
-    cancelled: 'bg-red-100 text-red-700',
-  }
-
   return (
     <TalentLayout>
-      <div>
-        <h1 className="text-2xl font-bold mb-6">My Jobs</h1>
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-bold">My Jobs</h1>
 
         {isLoading ? (
-          <p className="text-gray-500">Loading...</p>
-        ) : jobs.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500">No jobs assigned to your accounts yet.</p>
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full" />
+            ))}
           </div>
+        ) : jobs.length === 0 ? (
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">No jobs assigned to your accounts yet.</p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {jobs.map((job) => {
               const jobAssignments = getAssignmentForJob(job.id)
               return (
-                <div key={job.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold">{job.title}</h2>
-                      <p className="text-sm text-gray-600">{job.brand_name}</p>
+                <Card key={job.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{job.title}</CardTitle>
+                        <CardDescription>{job.brand_name}</CardDescription>
+                      </div>
+                      <Badge variant={STATUS_VARIANT[job.status] || 'secondary'}>
+                        {job.status}
+                      </Badge>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[job.status] || 'bg-gray-100 text-gray-700'}`}>
-                      {job.status}
-                    </span>
-                  </div>
-
-                  {job.deadline && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Deadline: {new Date(job.deadline).toLocaleDateString()}
-                    </p>
-                  )}
-
-                  <div className="mt-4 border-t pt-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Your Assigned Accounts</h3>
-                    <ul className="space-y-1">
+                  </CardHeader>
+                  <CardContent>
+                    {job.deadline && (
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Deadline: {new Date(job.deadline).toLocaleDateString()}
+                      </p>
+                    )}
+                    <Separator className="mb-4" />
+                    <h3 className="text-sm font-medium mb-2">Your Assigned Accounts</h3>
+                    <ul className="flex flex-col gap-1">
                       {jobAssignments.map((a) => (
-                        <li key={a.id} className="text-sm text-gray-600">
+                        <li key={a.id} className="text-sm text-muted-foreground">
                           <span className="font-medium">{a.platform}</span> — {a.username}
                         </li>
                       ))}
                     </ul>
-                  </div>
-
-                  <div className="mt-4">
-                    <Link
-                      href={`/talent/jobs/${job.id}`}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 inline-block"
-                    >
-                      View Progress
-                    </Link>
-                  </div>
-                </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button render={<Link href={`/talent/jobs/${job.id}`} />}>
+                      
+                        View Progress
+                        <ArrowRight />
+                      
+                    </Button>
+                  </CardFooter>
+                </Card>
               )
             })}
           </div>

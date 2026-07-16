@@ -1,6 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface Job {
   id: string
@@ -41,117 +60,93 @@ export function JobModal({ isOpen, onClose, onSubmit, job }: JobModalProps) {
     }
   }, [job, isOpen])
 
-  if (!isOpen) return null
-
   const isEditMode = !!job
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!title || !brandName) return
-
     onSubmit({ title, description, brand_name: brandName, status, deadline })
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-bold mb-4">
-          {isEditMode ? 'Edit Job' : 'Create Job'}
-        </h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Job' : 'Create Job'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Update the job details below.' : 'Fill in the details to create a new job.'}
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="job-title" className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="job-title">Title</Label>
+            <Input
               id="job-title"
-              type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
-          <div>
-            <label htmlFor="job-brand" className="block text-sm font-medium text-gray-700">
-              Brand Name
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="job-brand">Brand Name</Label>
+            <Input
               id="job-brand"
-              type="text"
               value={brandName}
               onChange={(e) => setBrandName(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
-          <div>
-            <label htmlFor="job-description" className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="job-description">Description</Label>
+            <Textarea
               id="job-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Optional"
             />
           </div>
 
           {isEditMode && (
-            <div>
-              <label htmlFor="job-status" className="block text-sm font-medium text-gray-700">
-                Status
-              </label>
-              <select
-                id="job-status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="job-status">Status</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v ?? "draft")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          <div>
-            <label htmlFor="job-deadline" className="block text-sm font-medium text-gray-700">
-              Deadline
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="job-deadline">Deadline</Label>
+            <Input
               id="job-deadline"
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
-            >
+            </Button>
+            <Button type="submit">
               {isEditMode ? 'Save' : 'Create'}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

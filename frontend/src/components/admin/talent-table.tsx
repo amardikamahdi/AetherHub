@@ -2,6 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Edit, Trash2 } from 'lucide-react'
 
 interface Talent {
   id: string
@@ -40,71 +51,63 @@ export function TalentTable({ onEdit, onDelete, refreshKey }: TalentTableProps) 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading...</p>
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
   }
 
   if (talents.length === 0) {
-    return <p className="text-gray-500">No talents found</p>
+    return <p className="text-sm text-muted-foreground">No talents found</p>
   }
 
   return (
-    <div>
-      {/* Table */}
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 text-left text-sm">
-            <th className="p-3 font-medium">Name</th>
-            <th className="p-3 font-medium">Email</th>
-            <th className="p-3 font-medium">Phone</th>
-            <th className="p-3 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="flex flex-col gap-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {talents.map((talent) => (
-            <tr key={talent.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">{talent.name}</td>
-              <td className="p-3">{talent.email}</td>
-              <td className="p-3">{talent.phone || '-'}</td>
-              <td className="p-3 space-x-2">
-                <button
-                  onClick={() => onEdit?.(talent)}
-                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete?.(talent)}
-                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
+            <TableRow key={talent.id}>
+              <TableCell className="font-medium">{talent.name}</TableCell>
+              <TableCell>{talent.email}</TableCell>
+              <TableCell>{talent.phone || '-'}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="icon-sm" onClick={() => onEdit?.(talent)} aria-label="Edit">
+                    <Edit />
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => onDelete?.(talent)} aria-label="Delete">
+                    <Trash2 />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
             Page {page + 1} of {totalPages}
           </p>
-          <div className="space-x-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
-            >
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
               Previous
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
-            >
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

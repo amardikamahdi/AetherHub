@@ -2,6 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Edit, Trash2 } from 'lucide-react'
 
 interface User {
   id: string
@@ -13,11 +32,18 @@ interface User {
 interface UserTableProps {
   onEdit?: (user: User) => void
   onDelete?: (user: User) => void
+  refreshKey?: number
 }
 
 const PAGE_SIZE = 20
 
-export function UserTable({ onEdit, onDelete }: UserTableProps) {
+const ROLE_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
+  admin: 'default',
+  talent: 'secondary',
+  superadmin: 'destructive',
+}
+
+export function UserTable({ onEdit, onDelete, refreshKey }: UserTableProps) {
   const [users, setUsers] = useState<User[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
@@ -34,99 +60,90 @@ export function UserTable({ onEdit, onDelete }: UserTableProps) {
       })
       .catch(() => {})
       .finally(() => setIsLoading(false))
-  }, [page, roleFilter])
+  }, [page, refreshKey, roleFilter])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   if (isLoading) {
-    return <p className="text-gray-500">Loading...</p>
-  }
-
-  if (users.length === 0) {
-    return <p className="text-gray-500">No users found</p>
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div>
-      {/* Role filter */}
-      <div className="mb-4">
-        <label htmlFor="role-filter" className="mr-2 text-sm font-medium text-gray-700">
-          Filter by role
-        </label>
-        <select
-          id="role-filter"
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value)
-            setPage(0)
-          }}
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-        >
-          <option value="">All roles</option>
-          <option value="admin">Admin</option>
-          <option value="talent">Talent</option>
-          <option value="superadmin">Superadmin</option>
-        </select>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v ?? '')}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All roles</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="talent">Talent</SelectItem>
+            <SelectItem value="superadmin">Superadmin</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 text-left text-sm">
-            <th className="p-3 font-medium">Name</th>
-            <th className="p-3 font-medium">Email</th>
-            <th className="p-3 font-medium">Role</th>
-            <th className="p-3 font-medium">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">{user.name}</td>
-              <td className="p-3">{user.email}</td>
-              <td className="p-3">{user.role}</td>
-              <td className="p-3 space-x-2">
-                <button
-                  onClick={() => onEdit?.(user)}
-                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete?.(user)}
-                  className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {users.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No users found</p>
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={ROLE_VARIANT[user.role] || 'secondary'}>
+                      {user.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon-sm" onClick={() => onEdit?.(user)} aria-label="Edit">
+                        <Edit />
+                      </Button>
+                      <Button variant="ghost" size="icon-sm" onClick={() => onDelete?.(user)} aria-label="Delete">
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
-            Page {page + 1} of {totalPages}
-          </p>
-          <div className="space-x-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Page {page + 1} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

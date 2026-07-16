@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import { apiClient } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle2, Circle, ClipboardList, PenLine, Link2, Lightbulb } from 'lucide-react'
 
 interface StepState {
   step: string
@@ -23,11 +27,11 @@ const STEP_LABELS: Record<string, string> = {
   insight: 'Insight',
 }
 
-const STEP_ICONS: Record<string, string> = {
-  absen: '📋',
-  draft_storyline: '✍️',
-  input_link: '🔗',
-  insight: '💡',
+const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  absen: ClipboardList,
+  draft_storyline: PenLine,
+  input_link: Link2,
+  insight: Lightbulb,
 }
 
 export function ProgressSteps({ assignmentId, steps, onStepComplete }: ProgressStepsProps) {
@@ -36,6 +40,7 @@ export function ProgressSteps({ assignmentId, steps, onStepComplete }: ProgressS
 
   const completedCount = steps.filter((s) => s.status === 'completed').length
   const allComplete = completedCount === steps.length
+  const progressPercent = Math.round((completedCount / steps.length) * 100)
 
   const getNextStep = () => {
     return steps.find((s) => s.status === 'pending')
@@ -61,44 +66,44 @@ export function ProgressSteps({ assignmentId, steps, onStepComplete }: ProgressS
   const nextStep = getNextStep()
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       {/* Step indicators */}
-      <div className="flex items-center gap-2 mb-4">
-        {steps.map((step, index) => (
-          <div key={step.step} className="flex items-center">
-            <div
-              className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium ${
-                step.status === 'completed'
-                  ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                  : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
-              }`}
-            >
-              {step.status === 'completed' ? '✓' : STEP_ICONS[step.step] || index + 1}
+      <div className="flex items-center gap-2">
+        {steps.map((step, index) => {
+          const Icon = STEP_ICONS[step.step] || Circle
+          const isCompleted = step.status === 'completed'
+          return (
+            <div key={step.step} className="flex items-center">
+              <div className={`flex items-center justify-center size-10 rounded-full border-2 ${
+                isCompleted
+                  ? 'border-green-500 bg-green-50 text-green-600'
+                  : 'border-muted-foreground/20 bg-muted text-muted-foreground'
+              }`}>
+                {isCompleted ? (
+                  <CheckCircle2 className="size-5" />
+                ) : (
+                  <Icon className="size-5" />
+                )}
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`w-8 h-0.5 ${isCompleted ? 'bg-green-500' : 'bg-muted-foreground/20'}`} />
+              )}
             </div>
-            {index < steps.length - 1 && (
-              <div
-                className={`w-8 h-0.5 ${
-                  step.status === 'completed' ? 'bg-green-300' : 'bg-gray-200'
-                }`}
-              />
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Step labels */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2">
         {steps.map((step) => (
           <div key={step.step} className="flex-1 text-center">
-            <p
-              className={`text-xs font-medium ${
-                step.status === 'completed' ? 'text-green-700' : 'text-gray-500'
-              }`}
-            >
+            <p className={`text-xs font-medium ${
+              step.status === 'completed' ? 'text-green-600' : 'text-muted-foreground'
+            }`}>
               {STEP_LABELS[step.step] || step.step}
             </p>
             {step.completed_at && (
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {new Date(step.completed_at).toLocaleDateString()}
               </p>
             )}
@@ -107,31 +112,27 @@ export function ProgressSteps({ assignmentId, steps, onStepComplete }: ProgressS
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-        <div
-          className="bg-green-500 h-2 rounded-full transition-all"
-          style={{ width: `${(completedCount / steps.length) * 100}%` }}
-        />
-      </div>
+      <Progress value={progressPercent} />
 
       {/* Error message */}
       {error && (
-        <p className="text-sm text-red-600 mb-2">{error}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Complete button */}
       {!allComplete && nextStep && (
-        <button
-          onClick={handleCompleteStep}
-          disabled={isUpdating}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-        >
+        <Button onClick={handleCompleteStep} disabled={isUpdating}>
           {isUpdating ? 'Updating...' : `Complete: ${STEP_LABELS[nextStep.step] || nextStep.step}`}
-        </button>
+        </Button>
       )}
 
       {allComplete && (
-        <p className="text-sm text-green-600 font-medium">✓ All steps completed</p>
+        <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+          <CheckCircle2 className="size-4" />
+          All steps completed
+        </p>
       )}
     </div>
   )

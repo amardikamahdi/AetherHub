@@ -41,7 +41,6 @@ describe('SocialMediaPage', () => {
     })
     mockCreateSocialMedia.mockResolvedValue({ success: true, data: { id: 'sm-2' } })
     mockDeleteSocialMedia.mockResolvedValue({ success: true })
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   it('renders page with social media accounts', async () => {
@@ -59,14 +58,14 @@ describe('SocialMediaPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /add account/i }))
 
-    await userEvent.selectOptions(screen.getByLabelText('Platform'), 'tiktok')
+    // Fill username (platform defaults to 'instagram')
     await userEvent.type(screen.getByLabelText('Username'), '@newaccount')
 
     await userEvent.click(screen.getByRole('button', { name: /^add$/i }))
 
     await waitFor(() => {
       expect(mockCreateSocialMedia).toHaveBeenCalledWith('talent-1', {
-        platform: 'tiktok',
+        platform: 'instagram',
         username: '@newaccount',
         url: '',
       })
@@ -81,7 +80,9 @@ describe('SocialMediaPage', () => {
     const deleteButtons = await screen.findAllByRole('button', { name: /delete/i })
     await userEvent.click(deleteButtons[0])
 
-    expect(window.confirm).toHaveBeenCalled()
+    // Confirm the AlertDialog
+    const confirmButton = await screen.findByRole('button', { name: /delete/i })
+    await userEvent.click(confirmButton)
 
     await waitFor(() => {
       expect(mockDeleteSocialMedia).toHaveBeenCalledWith('sm-1')

@@ -1,7 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import { apiClient } from '@/lib/api'
+import { toast } from 'sonner'
+import { X } from 'lucide-react'
 
 interface Assignment {
   id: string
@@ -64,8 +85,6 @@ export function AssignmentModal({ isOpen, onClose, jobId, onAssignmentChange }: 
       .finally(() => setIsLoading(false))
   }, [isOpen, jobId])
 
-  if (!isOpen) return null
-
   const assignedSmIds = new Set(assignments.map((a) => a.social_media_id))
   const availableAccounts = socialMediaAccounts.filter((sm) => !assignedSmIds.has(sm.id))
 
@@ -80,8 +99,9 @@ export function AssignmentModal({ isOpen, onClose, jobId, onAssignmentChange }: 
       // Refresh assignments
       const res = await apiClient.listAssignmentsByJob(jobId)
       setAssignments(res.data || [])
+      toast.success('Account assigned')
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to assign')
+      toast.error(error instanceof Error ? error.message : 'Failed to assign')
     }
   }
 
@@ -93,8 +113,9 @@ export function AssignmentModal({ isOpen, onClose, jobId, onAssignmentChange }: 
       // Refresh assignments
       const res = await apiClient.listAssignmentsByJob(jobId)
       setAssignments(res.data || [])
+      toast.success('Account unassigned')
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to unassign')
+      toast.error(error instanceof Error ? error.message : 'Failed to unassign')
     }
   }
 
@@ -104,81 +125,87 @@ export function AssignmentModal({ isOpen, onClose, jobId, onAssignmentChange }: 
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
-        <h2 className="text-xl font-bold mb-4">Manage Assignments</h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Manage Assignments</DialogTitle>
+          <DialogDescription>
+            Assign social media accounts to this job.
+          </DialogDescription>
+        </DialogHeader>
 
         {isLoading ? (
-          <p className="text-gray-500">Loading...</p>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         ) : (
           <>
             {/* Current assignments */}
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Assigned Accounts</h3>
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Assigned Accounts</h3>
               {assignments.length === 0 ? (
-                <p className="text-sm text-gray-500">No accounts assigned yet</p>
+                <p className="text-sm text-muted-foreground">No accounts assigned yet</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="flex flex-col gap-2">
                   {assignments.map((a) => (
-                    <li key={a.id} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded">
-                      <div>
-                        <span className="text-sm font-medium">{a.platform}</span>
-                        <span className="text-sm text-gray-500 ml-2">{a.username}</span>
-                        <span className="text-xs text-gray-400 ml-2">({getTalentName(a.talent_id)})</span>
+                    <li key={a.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{a.platform}</Badge>
+                        <span className="text-sm">{a.username}</span>
+                        <span className="text-xs text-muted-foreground">({getTalentName(a.talent_id)})</span>
                       </div>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleUnassign(a.id)}
-                        className="text-sm text-red-600 hover:text-red-800"
+                        aria-label="Remove"
                       >
-                        Remove
-                      </button>
+                        <X />
+                      </Button>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
+            <Separator />
+
             {/* Add new assignment */}
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Add Assignment</h3>
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Add Assignment</h3>
               {availableAccounts.length === 0 ? (
-                <p className="text-sm text-gray-500">No more accounts available to assign</p>
+                <p className="text-sm text-muted-foreground">No more accounts available to assign</p>
               ) : (
-                <div className="flex space-x-2">
-                  <select
-                    value={selectedSmId}
-                    onChange={(e) => setSelectedSmId(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  >
-                    <option value="">Select account...</option>
-                    {availableAccounts.map((sm) => (
-                      <option key={sm.id} value={sm.id}>
-                        {sm.platform} - {sm.username} ({getTalentName(sm.talent_id)})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleAssign}
-                    disabled={!selectedSmId}
-                    className="px-4 py-2 text-sm text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
+                <div className="flex gap-2">
+                  <Select value={selectedSmId} onValueChange={(v) => setSelectedSmId(v ?? "")}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select account..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableAccounts.map((sm) => (
+                        <SelectItem key={sm.id} value={sm.id}>
+                          {sm.platform} - {sm.username} ({getTalentName(sm.talent_id)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleAssign} disabled={!selectedSmId}>
                     Add
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           </>
         )}
 
-        <div className="flex justify-end pt-4 mt-4 border-t">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             Close
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
