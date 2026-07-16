@@ -20,6 +20,8 @@
 | `PORT` | No | Server port (default: `8080`) | `8080` |
 | `JWT_SECRET` | Yes | Secret key for JWT signing | `your-secret-key-min-32-chars` |
 | `JWT_EXPIRY` | No | JWT token expiry duration (default: `24h`) | `24h`, `7d` |
+| `SEED_ADMIN_EMAIL` | No | Default superadmin email (default: `admin@aetherhub.com`) | `admin@aetherhub.com` |
+| `SEED_ADMIN_PASSWORD` | No | Default superadmin password (auto-generated if not set) | `your-secure-password` |
 | `SUPABASE_URL` | Yes* | Supabase project URL | `https://xxx.supabase.co` |
 | `SUPABASE_SERVICE_KEY` | Yes* | Supabase service role key | `eyJxxx...` |
 <!-- /AUTO-GENERATED -->
@@ -40,6 +42,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 PORT=8080
 JWT_SECRET=change-me-to-a-secure-random-string-at-least-32-chars
 JWT_EXPIRY=24h
+SEED_ADMIN_EMAIL=admin@aetherhub.com
+SEED_ADMIN_PASSWORD=your-secure-password
 # SUPABASE_URL=https://xxx.supabase.co
 # SUPABASE_SERVICE_KEY=eyJxxx...
 ```
